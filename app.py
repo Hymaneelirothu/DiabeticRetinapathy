@@ -2,9 +2,32 @@ import streamlit as st
 from PIL import Image
 import numpy as np
 import tensorflow as tf
+import requests
+import os
+
+# Function to download the model from Google Drive
+def download_file_from_google_drive(url, destination):
+    response = requests.get(url, stream=True)
+    if response.status_code == 200:
+        with open(destination, "wb") as file:
+            for chunk in response.iter_content(chunk_size=1024):
+                if chunk:
+                    file.write(chunk)
+    else:
+        raise Exception("Failed to download the file")
+
+# Google Drive file download link
+google_drive_link = 'https://drive.google.com/uc?id=1xWPWU4YaqTQlFVqcvfM7XL-oigWG7KUX&export=download'
+
+# Path to save the downloaded model
+model_path = 'best_model.keras'
+
+# Download the file
+if not os.path.exists(model_path):  # Only download if the file doesn't exist
+    download_file_from_google_drive(google_drive_link, model_path)
 
 # Load the model
-model = tf.keras.models.load_model(r'best_model.keras')
+model = tf.keras.models.load_model(model_path)
 
 # Function to preprocess the image
 def preprocess_image(image, target_size):
@@ -15,11 +38,6 @@ def preprocess_image(image, target_size):
     image = image / 255.0  # Normalize to [0, 1] range
     image = np.expand_dims(image, axis=0)
     return image
-
-# Function to preprocess additional data (if needed)
-def preprocess_additional_data(data):
-    # Ensure data is in the correct shape and format
-    return np.expand_dims(data, axis=0)  # Example to match input shape
 
 # Streamlit UI
 st.title("Diabetic Retinopathy Detection App")
